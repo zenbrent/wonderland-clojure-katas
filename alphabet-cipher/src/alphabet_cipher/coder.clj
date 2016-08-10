@@ -45,7 +45,9 @@
   (if (apply = (map count items))
     (apply = items)
     (and (apply = (butlast items))
-         (string/starts-with? (first items) (subvec items (count items))))))
+         (let [l (subvec items (count items))
+               f (take (count l) (first items))]
+           (= f l)))))
 
 ;; (a . . .) (a . . .) (a .)
 ;; if you slice them at intervals every (last repeats), and they all match
