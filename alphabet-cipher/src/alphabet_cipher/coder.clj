@@ -45,9 +45,14 @@
   (if (apply = (map count items))
     (apply = items)
     (and (apply = (butlast items))
-         (let [l (subvec items (count items))
+         (let [l (last items)
                f (take (count l) (first items))]
            (= f l)))))
+
+(defn filter-idxs [pred coll]
+  (map first
+       (filter (fn [[i v]] (pred i v))
+               (map (fn [a b] [a b]) (range) coll))))
 
 ;; (a . . .) (a . . .) (a .)
 ;; if you slice them at intervals every (last repeats), and they all match
@@ -62,19 +67,11 @@
   (let [looped-key (vec (map decode-value
                              message
                              cipher))
-        first-char-repeats (reduce-kv
-                             (fn [acc idx values]
-                               (if (= (first looped-key) values)
-                                 (conj acc idx)
-                                 acc))
-                             []
-                             looped-key)
-        string-repeats (mapcat
-                         (fn [n] (let [xs (partition n looped-key)]
-                                   (if (< n (/ (count looped-key) 2))
-                                     [xs]
-                                     [])))
-                         (filter #(not= 0 %) first-char-repeats))
+        key-0 (first looped-key)
+        first-char-repeats (filter-idxs (fn [i v] (= key-0 v))
+                                               looped-key)
+        string-repeats (map (fn [s] (partition s s nil looped-key))
+                            (filter (partial not= 0) first-char-repeats))
         matches (map first (filter match-all-and-start-of-last string-repeats))]
     (string/join (first matches))))
 
